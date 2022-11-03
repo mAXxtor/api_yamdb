@@ -148,3 +148,5 @@ dmypy.json
 # папки со статикой и медиа
 media/
 
+# папака с дерикторие emailBackend
+sent_emails/

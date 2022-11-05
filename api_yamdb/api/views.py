@@ -38,10 +38,6 @@ class CategoryViewSet(CreateDeleteListViewSet):
 
 
 class ConfCodeView(APIView):
-    """
-    При получении POST-запроса с email и username отправляет
-    письмо с confirmation_code на email.
-    """
     permission_classes = (permissions.AllowAny,)
 
     def post(self, request):
@@ -62,10 +58,6 @@ class ConfCodeView(APIView):
 
 
 class TokenView(APIView):
-    """
-    При получении POST-запроса с username и confirmation_code
-    возвращает JWT-токен.
-    """
     permission_classes = (AllowAny,)
 
     def post(self, request):

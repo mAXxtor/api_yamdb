@@ -123,6 +123,7 @@ class GenreViewSet(mixins.CreateModelMixin,
     pagination_class = LimitOffsetPagination
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
+    lookup_field = 'slug'
 
     def destroy(self, request, *args, **kwargs):
         genre_slug = kwargs['slug']
@@ -150,10 +151,25 @@ class CategoryViewSet(mixins.CreateModelMixin,
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
+class ReviewViewSet(viewsets.ModelViewSet):
+    """Просмотр и редактирование рецензий."""
+    serializer_class = ReviewSerializer
+    permission_classes = (IsAuthenticatedOrReadOnly,)
+
+    def get_title(self):
+        return get_object_or_404(Title, id=self.kwargs.get('title_id'))
+
+    def get_queryset(self):
+        return self.get_title().reviews.all()  # type: ignore
+
+    def perform_create(self, serializer):
+        serializer.save(author=self.request.user, title=self.get_title())
+
+
 class CommentViewSet(viewsets.ModelViewSet):
     """Просмотр и редактирование комментариев."""
     serializer_class = CommentSerializer
-    permission_classes = (IsAuthenticatedOrReadOnly, IsAuthorOrModer, IsAdmin,)
+    permission_classes = (IsAuthenticatedOrReadOnly,)
 
     def get_review(self):
         return get_object_or_404(Review, id=self.kwargs.get('review_id'))
@@ -163,18 +179,3 @@ class CommentViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user, review=self.get_review())
-
-
-class ReviewViewSet(viewsets.ModelViewSet):
-    """Просмотр и редактирование рецензий."""
-    serializer_class = ReviewSerializer
-    permission_classes = (IsAuthenticatedOrReadOnly, IsAuthorOrModer, IsAdmin,)
-
-    def get_title(self):
-        return get_object_or_404(Title, pk=self.kwargs.get('title_id'))
-
-    def get_queryset(self):
-        return self.get_title().reviews.all()  # type: ignore
-
-    def perform_create(self, serializer):
-        serializer.save(author=self.request.user, title=self.get_title())

@@ -47,12 +47,14 @@ class GenreSerializer(serializers.ModelSerializer):
     class Meta:
         fields = ('name', 'slug')
         model = Genre
+        lookup_field = 'slug'
 
 
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
         fields = ('name', 'slug')
         model = Category
+        lookup_field = 'slug'
 
 
 class TitleSerializer(serializers.ModelSerializer):
@@ -96,19 +98,18 @@ class ReviewSerializer(serializers.ModelSerializer):
 
     def validate_score(self, value):
         if 0 > value > 10:
-            raise serializers.ValidationError('Оценка по 10-бальной шкале!')
+            raise serializers.ValidationError(
+                'Оценка ведется по 10-бальной шкале!')
         return value
 
     def validate(self, data):
         request = self.context['request']
-        title_id = self.context.get('view').kwargs.get('title_id')
+        title_id = self.context['view'].kwargs.get('title_id')
         title = get_object_or_404(Title, pk=title_id)
-        if (
-            request.method == 'POST'
-            and Review.objects.filter(
-                title=title, author=request.user).exists()
-        ):
-            raise ValidationError('Может существовать только один отзыв!')
+        if request.method == 'POST' and Review.objects.filter(
+                title=title, author=request.user).exists():
+            raise ValidationError(
+                'Вы уже оставили отзыв к этому произведению!')
         return data
 
 

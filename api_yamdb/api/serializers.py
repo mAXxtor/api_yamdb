@@ -3,7 +3,7 @@ from django.forms import ValidationError
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 
-from reviews.models import Comment, Genre, Title, Category, Review
+from reviews.models import Category, Comment, Genre, Review, Title
 from users.models import User
 from users.validators import username_validation
 
@@ -71,10 +71,12 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class NotAdminUserSerializer(UserSerializer):
+    """Сериализатор для пользователя."""
     role = serializers.CharField(read_only=True)
 
 
 class GenreSerializer(serializers.ModelSerializer):
+    """Сериализатор для жанра."""
     class Meta:
         fields = ('name', 'slug')
         model = Genre
@@ -82,6 +84,7 @@ class GenreSerializer(serializers.ModelSerializer):
 
 
 class CategorySerializer(serializers.ModelSerializer):
+    """Сериализатор для категории."""
     class Meta:
         fields = ('name', 'slug')
         model = Category
@@ -121,8 +124,6 @@ class TitlePostSerialzier(serializers.ModelSerializer):
             'id', 'name', 'year', 'rating', 'description', 'genre', 'category')
 
     def to_representation(self, instance):
-        """Изменяет отображение информации в ответе (response)
-         после POST запроса, в соответствии с ТЗ"""
         return TitleSerializer(instance).data
 
 

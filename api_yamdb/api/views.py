@@ -12,14 +12,14 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from .filters import TitleFilter
 from .email import send_confirmation_code
+from .filters import TitleFilter
 from .permissions import (IsAuthorModerAdminOrReadOnly, AdminOrReadOnly,
                           IsRoleAdmin)
 from .serializers import (
     CategorySerializer, CommentSerializer, GenreSerializer,
     NotAdminUserSerializer, ReviewSerializer, SignUpSerializer,
-    TitleSerializer, TitlePostSerialzier, TokenSerializer, UserSerializer
+    TitlePostSerialzier, TitleSerializer, TokenSerializer, UserSerializer
 )
 from reviews.models import Category, Genre, Review, Title
 from users.models import User

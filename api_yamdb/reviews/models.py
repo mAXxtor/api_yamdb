@@ -1,15 +1,24 @@
 from django.contrib.auth import get_user_model
 from django.db import models
 from django.core.exceptions import ValidationError
+# from django.contrib.auth.models import AbstractUser
 import datetime as dt
 
 from django.core.validators import MaxValueValidator, MinValueValidator
 
 User = get_user_model()
 
+# class User(AbstractUser):
+#     username = models.CharField(max_length=256)
+#     email = models.EmailField()
+#     role = models.CharField(max_length=56)
+#     bio = models.TextField(max_length=56)
+#     first_name = models.CharField(max_length=56)
+#     last_name = models.CharField(max_length=50)
+
 
 def validate_year(value):
-    if int(value) > dt.datetime.year:
+    if value > dt.datetime.year:
         raise ValidationError(
             f'Год не может быть больше текущего! У вас: {value}'
         )
@@ -33,18 +42,18 @@ class Category(models.Model):
 
 class Title(models.Model):
     name = models.CharField(max_length=200)
-    year = models.IntegerField(max_length=5, validators=(validate_year,))
+    year = models.IntegerField()  # validators=(validate_year,)
     description = models.TextField(max_length=250, blank=True, null=True)
     genre = models.ManyToManyField(
         Genre,
         through='GenreTitle',
         blank=True,
-        related_name='titls'
+        related_name='titles'
     )
     category = models.ForeignKey(
         Category,
         on_delete=models.SET_NULL,
-        related_name='titls',
+        related_name='titles',
         blank=True,
         null=True
     )
@@ -80,7 +89,7 @@ class Review(models.Model):
     )
     score = models.PositiveSmallIntegerField(
         validators=(MaxValueValidator(10), MinValueValidator(1)),
-        error_messages={'validators':'Диапазон оценки от 1 до 10!'}
+        error_messages={'validators': 'Диапазон оценки от 1 до 10!'}
     )
 
 

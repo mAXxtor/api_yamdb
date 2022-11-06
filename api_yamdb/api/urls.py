@@ -21,6 +21,8 @@ urlpatterns = [
         path('signup/', UserRegView.as_view()),
         path('token/', TokenView.as_view())
     ])),
+    path('v1/users/<slug:slug>/',
+         UsersViewSet.as_view({'patch': 'update', 'get':'retrieve', 'delete': 'destroy'})),
     path('token/', TokenObtainPairView.as_view()),
     path('v1/', include(router_v1.urls)),
     path('v1/genres/',

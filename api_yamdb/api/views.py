@@ -16,7 +16,7 @@ from .email import send_confirmation_code
 from .serializers import (
     AdminUserSerializer, CategorySerializer, CommentSerializer,
     GenreSerializer, ReviewSerializer, SignUpSerializer, TitleSerializer,
-    TokenSerializer,
+    TokenSerializer, UserSerializer,
 )
 from .permissions import IsAdmin, IsAuthorOrModer, IsRoleAdmin
 
@@ -99,6 +99,11 @@ class UsersViewSet(viewsets.ModelViewSet):
     permission_classes = (IsRoleAdmin,)
     filter_backends = (filters.SearchFilter,)
     search_fields = ('username',)
+
+    def retrieve(self, request, *args, **kwargs):
+        user = User.objects.get(username=kwargs['slug'])
+        serializer = UserSerializer(user)
+        return Response(serializer.data)
 
 
 class TitleViewSet(viewsets.ModelViewSet):

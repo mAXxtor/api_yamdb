@@ -10,11 +10,26 @@ from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 from reviews.models import Category, Genre, Title, User
 
+from django.conf import settings
+from user.models import User
+from reviews.models import Category, Review
 from .email import send_confirmation_code
 from .mixins import CreateDeleteListViewSet
-from .permissions import IsAdmin
-from .serializers import (CategorySerializer, GenreSerializer,
-                          SignUpSerializer, TitleSerializer, TokenSerializer)
+from .serializers import (CommentSerializer, ReviewSerializer, SignUpSerializer, TokenSerializer, CategorySerializer,
+                          AdminUserSerializer,)
+from .permissions import IsAdmin, IsRoleAdmin
+from django.shortcuts import get_object_or_404
+from rest_framework import viewsets
+from rest_framework.pagination import LimitOffsetPagination
+from rest_framework import filters
+from rest_framework import mixins
+from rest_framework.response import Response
+from rest_framework import status
+
+from reviews.models import Genre, Title, Category
+from .serializers import (
+    GenreSerializer, CategorySerializer, TitleSerializer
+)
 
 
 # class CategoryViewSet(CreateDeleteListViewSet):
@@ -24,7 +39,6 @@ from .serializers import (CategorySerializer, GenreSerializer,
 #     pagination_class = LimitOffsetPagination
 #     filter_backends = (filters.SearchFilter,)
 #     search_fields = ('=name',)
-
 #     def destroy(self, request, *args, **kwargs):
 #         category = get_object_or_404(Category, slug=kwargs['pk'])
 #         if request.user.is_admin or request.user.is_superuser:
@@ -86,6 +100,14 @@ class UserRegView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
+class UsersViewSet(viewsets.ModelViewSet):
+    queryset = User.objects.all()
+    serializer_class = AdminUserSerializer
+    permission_classes = (IsRoleAdmin,)
+    filter_backends = (filters.SearchFilter,)
+    search_fields = ('username',)
+
+
 class TitleViewSet(viewsets.ModelViewSet):
     queryset = Title.objects.all()
     serializer_class = TitleSerializer
@@ -126,3 +148,36 @@ class CategoryViewSet(mixins.CreateModelMixin,
         get_object_or_404(Category, slug=category_slug)
         Genre.objects.filter(slug=category_slug).delete()
         return Response(status=status.HTTP_202_ACCEPTED)
+
+
+class CommentViewSet(viewsets.ModelViewSet):
+    serializer_class = CommentSerializer
+
+    def get_queryset(self):
+        review = get_object_or_404(
+            Review,
+            id=self.kwargs.get('review_id'))
+        return review.comments.all()
+
+    def perform_create(self, serializer):
+        review = get_object_or_404(
+            Review,
+            id=self.kwargs.get('review_id'))
+        serializer.save(author=self.request.user, review=review)
+
+
+class ReviewViewSet(viewsets.ModelViewSet):
+    serializer_class = ReviewSerializer
+
+    def get_queryset(self):
+        title = get_object_or_404(
+            Title,
+            id=self.kwargs.get('title_id'))
+        return title.reviews.all()
+
+    def perform_create(self, serializer):
+        title = get_object_or_404(
+            Title,
+            id=self.kwargs.get('title_id'))
+        serializer.save(author=self.request.user, title=title)
+

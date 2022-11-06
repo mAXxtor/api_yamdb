@@ -58,15 +58,20 @@ class UserSerializer(serializers.ModelSerializer):
             )
         return username_validation(username)
 
+    def validate_email(self, email):
+        """Валидация почты пользователя."""
+        if (
+            self.context['request'].method == 'POST'
+            and User.objects.filter(email=email).exists()
+        ):
+            raise ValidationError(
+                'Пользователь с таким Email уже существует.'
+            )
+        return username_validation(email)
+
 
 class NotAdminUserSerializer(UserSerializer):
     role = serializers.CharField(read_only=True)
-    # class Meta:
-    #     model = User
-    #     fields = (
-    #         'username', 'email', 'first_name', 'last_name', 'bio', 'role',
-    #     )
-    #     read_only_fields = ('role',)
 
 
 class GenreSerializer(serializers.ModelSerializer):

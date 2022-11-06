@@ -23,7 +23,7 @@ class User(AbstractUser):
                                 blank=False,
                                 null=False,
                                 validators=(username_validation,),)
-    email = models.EmailField(max_length=100,
+    email = models.EmailField(max_length=254,
                               verbose_name='Email',
                               help_text='Укажите email',
                               unique=True,

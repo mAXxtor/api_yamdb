@@ -1,53 +1,39 @@
+from django.conf import settings
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
 from django.shortcuts import get_object_or_404
-from rest_framework import permissions, status, filters
+from rest_framework import filters, mixins, permissions, status, viewsets
 from rest_framework.pagination import LimitOffsetPagination
-from rest_framework.permissions import (AllowAny, IsAuthenticatedOrReadOnly)
+from rest_framework.permissions import AllowAny, IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
+from reviews.models import Category, Genre, Title, User
 
-from django.conf import settings
-from user.models import User
-from reviews.models import Category
 from .email import send_confirmation_code
 from .mixins import CreateDeleteListViewSet
-from .serializers import (SignUpSerializer, TokenSerializer, CategorySerializer,
-                          )
 from .permissions import IsAdmin
-from django.shortcuts import get_object_or_404
-from rest_framework import viewsets
-from rest_framework.pagination import LimitOffsetPagination
-from rest_framework import filters
-from rest_framework import mixins
-from rest_framework.response import Response
-from rest_framework import status
-
-from reviews.models import Genre, Title, Category
-from .serializers import (
-    GenreSerializer, CategorySerializer, TitleSerializer
-)
+from .serializers import (CategorySerializer, GenreSerializer,
+                          SignUpSerializer, TitleSerializer, TokenSerializer)
 
 
+# class CategoryViewSet(CreateDeleteListViewSet):
+#     queryset = Category.objects.all()
+#     serializer_class = CategorySerializer
+#     permission_classes = (IsAuthenticatedOrReadOnly, IsAdmin,)
+#     pagination_class = LimitOffsetPagination
+#     filter_backends = (filters.SearchFilter,)
+#     search_fields = ('=name',)
 
-class CategoryViewSet(CreateDeleteListViewSet):
-    queryset = Category.objects.all()
-    serializer_class = CategorySerializer
-    permission_classes = (IsAuthenticatedOrReadOnly, IsAdmin,)
-    pagination_class = LimitOffsetPagination
-    filter_backends = (filters.SearchFilter,)
-    search_fields = ('=name',)
+#     def destroy(self, request, *args, **kwargs):
+#         category = get_object_or_404(Category, slug=kwargs['pk'])
+#         if request.user.is_admin or request.user.is_superuser:
+#             self.perform_destroy(category)
+#             return Response(status=status.HTTP_204_NO_CONTENT)
+#         return Response(status=status.HTTP_403_FORBIDDEN)
 
-    def destroy(self, request, *args, **kwargs):
-        category = get_object_or_404(Category, slug=kwargs['pk'])
-        if request.user.is_admin or request.user.is_superuser:
-            self.perform_destroy(category)
-            return Response(status=status.HTTP_204_NO_CONTENT)
-        return Response(status=status.HTTP_403_FORBIDDEN)
-
-    def perform_destroy(self, category):
-        category.delete()
+#     def perform_destroy(self, category):
+#         category.delete()
 
 
 class ConfCodeView(APIView):
@@ -140,4 +126,3 @@ class CategoryViewSet(mixins.CreateModelMixin,
         get_object_or_404(Category, slug=category_slug)
         Genre.objects.filter(slug=category_slug).delete()
         return Response(status=status.HTTP_202_ACCEPTED)
-

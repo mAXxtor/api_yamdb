@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from reviews.models import Genre, Title, Category
+from reviews.models import Genre, Title, Category, User
 
 class SignUpSerializer(serializers.ModelSerializer):
     class Meta:

@@ -31,6 +31,7 @@ INSTALLED_APPS = [
     'django_filters',
     'api',
     'reviews',
+    'user',
 ]
 
 MIDDLEWARE = [
@@ -111,6 +112,9 @@ USE_TZ = True
 STATIC_URL = '/static/'
 
 STATICFILES_DIRS = (os.path.join(BASE_DIR, 'static/'),)
+
+AUTH_USER_MODEL = 'user.User'
+EMPTY = '-'
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [

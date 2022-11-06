@@ -10,12 +10,12 @@ from rest_framework_simplejwt.tokens import RefreshToken
 
 from django.conf import settings
 from user.models import User
-from reviews.models import Category
 from .email import send_confirmation_code
 from .mixins import CreateDeleteListViewSet
 from .serializers import (SignUpSerializer, TokenSerializer, CategorySerializer,
+                          AdminUserSerializer,
                           )
-from .permissions import IsAdmin
+from .permissions import IsAdmin, IsRoleAdmin
 from django.shortcuts import get_object_or_404
 from rest_framework import viewsets
 from rest_framework.pagination import LimitOffsetPagination
@@ -28,7 +28,6 @@ from reviews.models import Genre, Title, Category
 from .serializers import (
     GenreSerializer, CategorySerializer, TitleSerializer
 )
-
 
 
 class CategoryViewSet(CreateDeleteListViewSet):
@@ -100,6 +99,14 @@ class UserRegView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
+class UsersViewSet(viewsets.ModelViewSet):
+    queryset = User.objects.all()
+    serializer_class = AdminUserSerializer
+    permission_classes = (IsRoleAdmin,)
+    filter_backends = (filters.SearchFilter,)
+    search_fields = ('username',)
+
+
 class TitleViewSet(viewsets.ModelViewSet):
     queryset = Title.objects.all()
     serializer_class = TitleSerializer
@@ -140,4 +147,3 @@ class CategoryViewSet(mixins.CreateModelMixin,
         get_object_or_404(Category, slug=category_slug)
         Genre.objects.filter(slug=category_slug).delete()
         return Response(status=status.HTTP_202_ACCEPTED)
-

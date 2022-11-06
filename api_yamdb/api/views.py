@@ -47,14 +47,14 @@ class ConfCodeView(APIView):
         serializer = SignUpSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
-        email = serializer.validated_data.get('email')
+        email = serializer.validated_data.get('email')  # type: ignore
         confirmation_code = default_token_generator.make_token(user)
         send_mail(
             subject='Код подтверждения регистрации',
             message='Вы зарегистрировались на YAMDB!'
                     f'Ваш код подтвержения: {confirmation_code}',
             from_email=settings.ADMIN_EMAIL,
-            recipient_list=[email],
+            recipient_list=[email],  # type: ignore
             fail_silently=False,
         )
         return Response(serializer.validated_data, status=status.HTTP_200_OK)
@@ -159,7 +159,7 @@ class CommentViewSet(viewsets.ModelViewSet):
         return get_object_or_404(Review, id=self.kwargs.get('review_id'))
 
     def get_queryset(self):
-        return self.get_review().comments.all()
+        return self.get_review().comments.all()  # type: ignore
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user, review=self.get_review())
@@ -174,7 +174,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
         return get_object_or_404(Title, pk=self.kwargs.get('title_id'))
 
     def get_queryset(self):
-        return self.get_title().reviews.all()
+        return self.get_title().reviews.all()  # type: ignore
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user, title=self.get_title())

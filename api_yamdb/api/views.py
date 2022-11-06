@@ -113,7 +113,7 @@ class TitleViewSet(viewsets.ModelViewSet):
     serializer_class = TitleSerializer
     pagination_class = LimitOffsetPagination
     filter_backends = (filters.SearchFilter,)
-    search_fields = ('=category', '=genre', '=year', '=name')
+    search_fields = ('category', 'genre', 'year', 'name')
 
 
 class GenreViewSet(mixins.CreateModelMixin,
@@ -121,6 +121,7 @@ class GenreViewSet(mixins.CreateModelMixin,
                    mixins.DestroyModelMixin,
                    viewsets.GenericViewSet):
     queryset = Genre.objects.all()
+    permission_classes = (IsAuthenticatedOrReadOnly, IsAdmin,)
     serializer_class = GenreSerializer
     pagination_class = LimitOffsetPagination
     filter_backends = (filters.SearchFilter,)
@@ -130,7 +131,7 @@ class GenreViewSet(mixins.CreateModelMixin,
         genre_slug = kwargs['slug']
         get_object_or_404(Genre, slug=genre_slug)
         Genre.objects.filter(slug=genre_slug).delete()
-        return Response(status=status.HTTP_202_ACCEPTED)
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class CategoryViewSet(mixins.CreateModelMixin,
@@ -138,6 +139,7 @@ class CategoryViewSet(mixins.CreateModelMixin,
                       mixins.DestroyModelMixin,
                       viewsets.GenericViewSet):
     queryset = Category.objects.all()
+    permission_classes = (IsAuthenticatedOrReadOnly, IsAdmin,)
     serializer_class = CategorySerializer
     pagination_class = LimitOffsetPagination
     filter_backends = (filters.SearchFilter,)
@@ -146,8 +148,8 @@ class CategoryViewSet(mixins.CreateModelMixin,
     def destroy(self, request, *args, **kwargs):
         category_slug = kwargs['slug']
         get_object_or_404(Category, slug=category_slug)
-        Genre.objects.filter(slug=category_slug).delete()
-        return Response(status=status.HTTP_202_ACCEPTED)
+        Category.objects.filter(slug=category_slug).delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class CommentViewSet(viewsets.ModelViewSet):

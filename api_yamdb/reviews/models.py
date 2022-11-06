@@ -42,7 +42,7 @@ class Category(models.Model):
 
 class Title(models.Model):
     name = models.CharField(max_length=200)
-    year = models.IntegerField(validators=(validate_year,))
+    year = models.IntegerField() #validators=(validate_year,)
     description = models.TextField(max_length=250, blank=True, null=True)
     genre = models.ManyToManyField(
         Genre,

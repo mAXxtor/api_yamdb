@@ -20,11 +20,14 @@ class User(AbstractUser):
                                 verbose_name='Логин',
                                 help_text='Укажите логин',
                                 unique=True,
+                                blank=False,
+                                null=False,
                                 validators=(username_validation,),)
     email = models.EmailField(max_length=100,
                               verbose_name='Email',
                               help_text='Укажите email',
                               unique=True,
+                              blank=False,
                               null=False)
     confirmation_code = models.CharField(max_length=40,
                                          blank=True,
@@ -47,17 +50,25 @@ class User(AbstractUser):
                             default=USER,
                             help_text='Роль пользователя')
 
+    class Meta:
+        verbose_name = 'Пользователь'
+        verbose_name_plural = 'Пользователи'
+        constraints = [
+            models.CheckConstraint(
+                check=~models.Q(username='me'), name='username_not_me')
+        ]
+
     def __str__(self):
         return self.username
 
     @property
+    def is_user(self):
+        return self.role == USER
+
+    @property
     def is_admin(self):
-        return self.is_staff or self.role == ADMIN
+        return self.is_staff or self.role == ADMIN or self.is_superuser
 
     @property
     def is_moderator(self):
         return self.role == MODERATOR
-
-    class Meta:
-        verbose_name = 'Пользователь'
-        verbose_name_plural = 'Пользователи'

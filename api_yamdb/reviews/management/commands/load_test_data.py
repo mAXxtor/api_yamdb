@@ -3,8 +3,8 @@ from csv import DictReader
 from django.conf import settings
 from django.core.management import BaseCommand
 
-from reviews.models import Category, Comment, Genre, GenreTitle, Review, Title, User
-# from users.models import User
+from reviews.models import Category, Comment, Genre, GenreTitle, Review, Title
+from users.models import User
 
 TABLES = {
     Category: 'category.csv',

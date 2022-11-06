@@ -42,18 +42,18 @@ class Category(models.Model):
 
 class Title(models.Model):
     name = models.CharField(max_length=200)
-    year = models.IntegerField() #validators=(validate_year,)
+    year = models.IntegerField()  # validators=(validate_year,)
     description = models.TextField(max_length=250, blank=True, null=True)
     genre = models.ManyToManyField(
         Genre,
         through='GenreTitle',
         blank=True,
-        related_name='titls'
+        related_name='titles'
     )
     category = models.ForeignKey(
         Category,
         on_delete=models.SET_NULL,
-        related_name='titls',
+        related_name='titles',
         blank=True,
         null=True
     )
@@ -89,7 +89,7 @@ class Review(models.Model):
     )
     score = models.PositiveSmallIntegerField(
         validators=(MaxValueValidator(10), MinValueValidator(1)),
-        error_messages={'validators':'Диапазон оценки от 1 до 10!'}
+        error_messages={'validators': 'Диапазон оценки от 1 до 10!'}
     )
 
 

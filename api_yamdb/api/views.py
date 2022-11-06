@@ -1,42 +1,29 @@
 from django.conf import settings
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
+from django.db.models import Avg
 from django.shortcuts import get_object_or_404
 from rest_framework import filters, mixins, status, viewsets
+from rest_framework.decorators import action
 from rest_framework.pagination import LimitOffsetPagination
-from rest_framework.permissions import AllowAny, IsAuthenticatedOrReadOnly
+from rest_framework.permissions import (
+    AllowAny, IsAuthenticated, IsAuthenticatedOrReadOnly)
 from rest_framework.response import Response
+from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
-from reviews.models import Category, Genre, Review, Title
 
-from users.models import User
+from .filters import TitleFilter
 from .email import send_confirmation_code
-# from .mixins import CreateDeleteListViewSet
+from .permissions import (IsAuthorModerAdminOrReadOnly, AdminOrReadOnly,
+                          IsRoleAdmin)
 from .serializers import (
-    AdminUserSerializer, CategorySerializer, CommentSerializer,
-    GenreSerializer, ReviewSerializer, SignUpSerializer, TitleSerializer,
-    TokenSerializer,
+    CategorySerializer, CommentSerializer, GenreSerializer,
+    NotAdminUserSerializer, ReviewSerializer, SignUpSerializer,
+    TitleSerializer, TokenSerializer, UserSerializer
 )
-from .permissions import IsAdmin, IsAuthorOrModer, IsRoleAdmin
-
-
-# class CategoryViewSet(CreateDeleteListViewSet):
-#     queryset = Category.objects.all()
-#     serializer_class = CategorySerializer
-#     permission_classes = (IsAuthenticatedOrReadOnly, IsAdmin,)
-#     pagination_class = LimitOffsetPagination
-#     filter_backends = (filters.SearchFilter,)
-#     search_fields = ('=name',)
-#     def destroy(self, request, *args, **kwargs):
-#         category = get_object_or_404(Category, slug=kwargs['pk'])
-#         if request.user.is_admin or request.user.is_superuser:
-#             self.perform_destroy(category)
-#             return Response(status=status.HTTP_204_NO_CONTENT)
-#         return Response(status=status.HTTP_403_FORBIDDEN)
-
-#     def perform_destroy(self, category):
-#         category.delete()
+from reviews.models import Category, Genre, Review, Title
+from users.models import User
 
 
 class ConfCodeView(APIView):
@@ -75,7 +62,7 @@ class TokenView(APIView):
             return Response({'Неверный код'},
                             status=status.HTTP_400_BAD_REQUEST)
         token = RefreshToken.for_user(user)
-        return Response({'token': str(token.access_token)},
+        return Response({'token': token.access_token},
                         status=status.HTTP_200_OK)
 
 
@@ -95,20 +82,44 @@ class UserRegView(APIView):
 class UsersViewSet(viewsets.ModelViewSet):
     """Получает список пользователей. Доступен адмиристратору."""
     queryset = User.objects.all()
-    serializer_class = AdminUserSerializer
+    serializer_class = UserSerializer
     permission_classes = (IsRoleAdmin,)
     filter_backends = (filters.SearchFilter,)
     search_fields = ('username',)
 
+    @action(
+        methods=['GET', 'PATCH'],
+        detail=False,
+        permission_classes=(IsAuthenticated,),
+        url_path='me')
+    def get_current_user_info(self, request):
+        serializer = UserSerializer(request.user)
+        if request.method == 'PATCH':
+            if request.user.is_admin:
+                serializer = UserSerializer(
+                    request.user,
+                    data=request.data,
+                    partial=True)
+            else:
+                serializer = NotAdminUserSerializer(
+                    request.user,
+                    data=request.data,
+                    partial=True)
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.data)
+
 
 class TitleViewSet(viewsets.ModelViewSet):
     """Класс произведения. Доступен администратору."""
-    queryset = Title.objects.all()
+    queryset = Title.objects.annotate(
+        rating=Avg('reviews__score')).all()
     serializer_class = TitleSerializer
-    permission_classes = (IsRoleAdmin,)
+    permission_classes = (AdminOrReadOnly,)
     pagination_class = LimitOffsetPagination
-    filter_backends = (filters.SearchFilter,)
-    search_fields = ('category', 'genre', 'year', 'name',)
+    filter_backends = (DjangoFilterBackend,)
+    filterset_class = TitleFilter
     ordering_fields = ('name',)
 
 
@@ -119,7 +130,7 @@ class GenreViewSet(mixins.CreateModelMixin,
     """Класс жанра произведения. Доступен администратору."""
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
-    permission_classes = (IsAuthenticatedOrReadOnly, IsAdmin,)
+    permission_classes = (AdminOrReadOnly,)
     pagination_class = LimitOffsetPagination
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
@@ -139,7 +150,7 @@ class CategoryViewSet(mixins.CreateModelMixin,
     """Класс категории произведения. Доступен администратору."""
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
-    permission_classes = (IsAuthenticatedOrReadOnly, IsAdmin,)
+    permission_classes = (AdminOrReadOnly,)
     pagination_class = LimitOffsetPagination
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
@@ -154,7 +165,7 @@ class CategoryViewSet(mixins.CreateModelMixin,
 class ReviewViewSet(viewsets.ModelViewSet):
     """Просмотр и редактирование рецензий."""
     serializer_class = ReviewSerializer
-    permission_classes = (IsAuthenticatedOrReadOnly,)
+    permission_classes = (IsAuthenticatedOrReadOnly, IsAuthorModerAdminOrReadOnly,)
 
     def get_title(self):
         return get_object_or_404(Title, id=self.kwargs.get('title_id'))
@@ -169,7 +180,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
 class CommentViewSet(viewsets.ModelViewSet):
     """Просмотр и редактирование комментариев."""
     serializer_class = CommentSerializer
-    permission_classes = (IsAuthenticatedOrReadOnly,)
+    permission_classes = (IsAuthenticatedOrReadOnly, IsAuthorModerAdminOrReadOnly,)
 
     def get_review(self):
         return get_object_or_404(Review, id=self.kwargs.get('review_id'))

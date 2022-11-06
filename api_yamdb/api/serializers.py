@@ -35,12 +35,13 @@ class UserSerializer(serializers.ModelSerializer):
                   'role')
 
 
-class AdminUserSerializer(serializers.ModelSerializer):
+class NotAdminUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = (
             'username', 'email', 'first_name', 'last_name', 'bio', 'role',
         )
+        read_only_fields = ('role',)
 
 
 class GenreSerializer(serializers.ModelSerializer):

@@ -10,11 +10,11 @@ from rest_framework_simplejwt.tokens import RefreshToken
 
 from django.conf import settings
 from user.models import User
+from reviews.models import Category, Review
 from .email import send_confirmation_code
 from .mixins import CreateDeleteListViewSet
-from .serializers import (SignUpSerializer, TokenSerializer, CategorySerializer,
-                          AdminUserSerializer,
-                          )
+from .serializers import (CommentSerializer, ReviewSerializer, SignUpSerializer, TokenSerializer, CategorySerializer,
+                          AdminUserSerializer,)
 from .permissions import IsAdmin, IsRoleAdmin
 from django.shortcuts import get_object_or_404
 from rest_framework import viewsets
@@ -147,3 +147,36 @@ class CategoryViewSet(mixins.CreateModelMixin,
         get_object_or_404(Category, slug=category_slug)
         Genre.objects.filter(slug=category_slug).delete()
         return Response(status=status.HTTP_202_ACCEPTED)
+
+
+class CommentViewSet(viewsets.ModelViewSet):
+    serializer_class = CommentSerializer
+
+    def get_queryset(self):
+        review = get_object_or_404(
+            Review,
+            id=self.kwargs.get('review_id'))
+        return review.comments.all()
+
+    def perform_create(self, serializer):
+        review = get_object_or_404(
+            Review,
+            id=self.kwargs.get('review_id'))
+        serializer.save(author=self.request.user, review=review)
+
+
+class ReviewViewSet(viewsets.ModelViewSet):
+    serializer_class = ReviewSerializer
+
+    def get_queryset(self):
+        title = get_object_or_404(
+            Title,
+            id=self.kwargs.get('title_id'))
+        return title.reviews.all()
+
+    def perform_create(self, serializer):
+        title = get_object_or_404(
+            Title,
+            id=self.kwargs.get('title_id'))
+        serializer.save(author=self.request.user, title=title)
+

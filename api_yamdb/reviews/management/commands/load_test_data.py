@@ -27,6 +27,6 @@ class Command(BaseCommand):
                 encoding='utf-8'
             ) as csv_f:
                 model.objects.bulk_create(
-                    model(**data) for data in DictReader(csv_f))  # type: ignore
+                    model(**data) for data in DictReader(csv_f))
             self.stdout.write(self.style.SUCCESS(f'Загружено {csv_file}'))
         self.stdout.write(self.style.SUCCESS('Все данные загружены'))

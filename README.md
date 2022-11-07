@@ -97,6 +97,6 @@ http://127.0.0.1:8000/api/v1/titles/{title_id}/reviews/{review_id}/comments/
 [//]: #
 
    [Yandex Practicum]: <https://practicum.yandex.ru/>
-   [Анатолий Редько]: <>
-   [Федор Сидоров]: <>
-   [Максим Вербицкий]: <https://www.facebook.com/maks.verbitskii/>
+   [Анатолий Редько]: <https://github.com/krankir>
+   [Федор Сидоров]: <https://github.com/FedorSidorow>
+   [Максим Вербицкий]: <https://github.com/mAXxtor>

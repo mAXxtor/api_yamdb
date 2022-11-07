@@ -80,6 +80,7 @@ class GenreSerializer(serializers.ModelSerializer):
     class Meta:
         fields = ('name', 'slug')
         model = Genre
+        lookup_field = 'slug'
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -87,6 +88,7 @@ class CategorySerializer(serializers.ModelSerializer):
     class Meta:
         fields = ('name', 'slug')
         model = Category
+        lookup_field = 'slug'
 
 
 class TitleSerializer(serializers.ModelSerializer):
@@ -152,10 +154,6 @@ class ReviewSerializer(serializers.ModelSerializer):
             raise ValidationError(
                 'Вы уже оставили отзыв к этому произведению!')
         return data
-
-    class Meta:
-        fields = '__all__'
-        model = Review
 
 
 class CommentSerializer(serializers.ModelSerializer):

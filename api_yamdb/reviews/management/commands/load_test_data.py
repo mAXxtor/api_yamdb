@@ -8,11 +8,11 @@ from users.models import User
 
 TABLES = {
     Category: 'category.csv',
-    Comment: 'comments.csv',
     Genre: 'genre.csv',
+    Title: 'titles.csv',
     GenreTitle: 'genre_title.csv',
     Review: 'review.csv',
-    Title: 'titles.csv',
+    Comment: 'comments.csv',
     User: 'users.csv',
 }
 
@@ -28,4 +28,5 @@ class Command(BaseCommand):
             ) as csv_f:
                 model.objects.bulk_create(
                     model(**data) for data in DictReader(csv_f))
+            self.stdout.write(self.style.SUCCESS(f'Загружено {csv_file}'))
         self.stdout.write(self.style.SUCCESS('Все данные загружены'))

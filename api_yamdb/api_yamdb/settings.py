@@ -7,7 +7,6 @@ load_dotenv()
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-# SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.getenv('SECRET_KEY')
 
 DEBUG = True
@@ -26,8 +25,8 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt',
     'django_filters',
     'api',
+    'users',
     'reviews',
-    'user',
 ]
 
 MIDDLEWARE = [
@@ -101,7 +100,7 @@ STATIC_URL = '/static/'
 
 STATICFILES_DIRS = (os.path.join(BASE_DIR, 'static/'),)
 
-AUTH_USER_MODEL = 'user.User'
+AUTH_USER_MODEL = 'users.User'
 EMPTY = '-'
 
 REST_FRAMEWORK = {

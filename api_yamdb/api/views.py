@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
 from django.db.models import Avg
@@ -127,24 +128,27 @@ class GenreViewSet(mixins.CreateModelMixin,
                    mixins.ListModelMixin,
                    mixins.DestroyModelMixin,
                    viewsets.GenericViewSet):
+    """Класс жанра произведения. Доступен администратору."""
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
     permission_classes = (AdminOrReadOnly,)
     pagination_class = LimitOffsetPagination
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
+    lookup_field = 'slug'
 
     def destroy(self, request, *args, **kwargs):
         genre_slug = kwargs['slug']
         get_object_or_404(Genre, slug=genre_slug)
         Genre.objects.filter(slug=genre_slug).delete()
-        return Response(status=status.HTTP_202_ACCEPTED)
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class CategoryViewSet(mixins.CreateModelMixin,
                       mixins.ListModelMixin,
                       mixins.DestroyModelMixin,
                       viewsets.GenericViewSet):
+    """Класс категории произведения. Доступен администратору."""
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
     permission_classes = (AdminOrReadOnly,)
@@ -155,27 +159,12 @@ class CategoryViewSet(mixins.CreateModelMixin,
     def destroy(self, request, *args, **kwargs):
         category_slug = kwargs['slug']
         get_object_or_404(Category, slug=category_slug)
-        Genre.objects.filter(slug=category_slug).delete()
-        return Response(status=status.HTTP_202_ACCEPTED)
-
-
-class CommentViewSet(viewsets.ModelViewSet):
-    serializer_class = CommentSerializer
-
-    def get_queryset(self):
-        review = get_object_or_404(
-            Review,
-            id=self.kwargs.get('review_id'))
-        return review.comments.all()
-
-    def perform_create(self, serializer):
-        review = get_object_or_404(
-            Review,
-            id=self.kwargs.get('review_id'))
-        serializer.save(author=self.request.user, review=review)
+        Category.objects.filter(slug=category_slug).delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
+    """Просмотр и редактирование рецензий."""
     serializer_class = ReviewSerializer
     permission_classes = (IsAuthorModerAdminOrReadOnly,)
 
@@ -186,10 +175,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
         return self.get_title().reviews.all()
 
     def perform_create(self, serializer):
-        title = get_object_or_404(
-            Title,
-            id=self.kwargs.get('title_id'))
-        serializer.save(author=self.request.user, title=title)
+        serializer.save(author=self.request.user, title=self.get_title())
 
 
 class CommentViewSet(viewsets.ModelViewSet):

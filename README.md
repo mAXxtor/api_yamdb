@@ -51,6 +51,16 @@ cd yatube_api
 python manage.py migrate
 ```
 
+Если необходимо, загрузить тестовые данные:
+
+```
+cd yatube_api
+```
+
+```
+python manage.py load_test_data
+```
+
 Запустить проект:
 
 ```

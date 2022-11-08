@@ -2,8 +2,10 @@ from django.core.validators import MaxValueValidator, MinValueValidator
 from django.forms import ValidationError
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers
+from rest_framework.validators import UniqueValidator
 
 from reviews.models import Category, Comment, Genre, Review, Title
+from reviews.validators import validate_year
 from users.models import User
 from users.validators import username_validation
 
@@ -35,8 +37,10 @@ class TokenSerializer(serializers.ModelSerializer):
 
 class UserSerializer(serializers.ModelSerializer):
     """Сериализатор для пользователя."""
-    username = serializers.CharField(required=True)
-    email = serializers.EmailField(required=True)
+    username = serializers.CharField(required=True, validators=[
+        UniqueValidator(queryset=User.objects.all()), ])
+    email = serializers.EmailField(required=True, validators=[
+        UniqueValidator(queryset=User.objects.all()), ])
 
     class Meta:
         model = User
@@ -47,32 +51,18 @@ class UserSerializer(serializers.ModelSerializer):
                   'bio',
                   'role')
 
-    def validate_username(self, username):
-        """Валидация имени пользователя."""
-        if (
-            self.context['request'].method == 'POST'
-            and User.objects.filter(username=username).exists()
-        ):
-            raise ValidationError(
-                'Пользователь с таким именем уже существует.'
-            )
-        return username_validation(username)
-
-    def validate_email(self, email):
-        """Валидация почты пользователя."""
-        if (
-            self.context['request'].method == 'POST'
-            and User.objects.filter(email=email).exists()
-        ):
-            raise ValidationError(
-                'Пользователь с таким Email уже существует.'
-            )
-        return username_validation(email)
-
 
 class NotAdminUserSerializer(UserSerializer):
     """Сериализатор для пользователя."""
-    role = serializers.CharField(read_only=True)
+    class Meta:
+        model = User
+        fields = ('username',
+                  'email',
+                  'first_name',
+                  'last_name',
+                  'bio',
+                  'role')
+        read_only_fields = ('role',)
 
 
 class GenreSerializer(serializers.ModelSerializer):
@@ -96,6 +86,8 @@ class TitleSerializer(serializers.ModelSerializer):
     genre = GenreSerializer(many=True)
     category = CategorySerializer()
     rating = serializers.IntegerField(default=1)
+    year = serializers.IntegerField(validators=[MinValueValidator(0),
+                                                validate_year, ])
 
     class Meta:
         fields = (

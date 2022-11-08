@@ -27,7 +27,6 @@ from users.models import User
 
 class ConfCodeView(APIView):
     """Отправка пользователю кода подтверждения."""
-    permission_classes = (AllowAny,)
 
     def post(self, request):
         serializer = SignUpSerializer(data=request.data)
@@ -48,7 +47,6 @@ class ConfCodeView(APIView):
 
 class TokenView(APIView):
     """Проверка кода подтверждения и отправка токена."""
-    permission_classes = (AllowAny,)
 
     def post(self, request):
         serializer = TokenSerializer(data=request.data)
@@ -61,7 +59,7 @@ class TokenView(APIView):
             return Response({'Неверный код'},
                             status=status.HTTP_400_BAD_REQUEST)
         token = RefreshToken.for_user(user)
-        return Response({'token': token.access_token},
+        return Response({'token': str(token.access_token)},
                         status=status.HTTP_200_OK)
 
 
@@ -110,7 +108,7 @@ class TitleViewSet(viewsets.ModelViewSet):
     serializer_class = TitleSerializer
     permission_classes = (AdminOrReadOnly,)
     pagination_class = LimitOffsetPagination
-    filter_backends = (DjangoFilterBackend,)
+    filter_backends = (DjangoFilterBackend, filters.OrderingFilter)
     filterset_class = TitleFilter
     filterset_fields = ('name',)
     ordering_fields = ('name',)
@@ -155,12 +153,7 @@ class CategoryViewSet(mixins.CreateModelMixin,
     pagination_class = LimitOffsetPagination
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
-
-    def destroy(self, request, *args, **kwargs):
-        category_slug = kwargs['slug']
-        get_object_or_404(Category, slug=category_slug)
-        Category.objects.filter(slug=category_slug).delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
+    lookup_field = 'slug'
 
 
 class ReviewViewSet(viewsets.ModelViewSet):

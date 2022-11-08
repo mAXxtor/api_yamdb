@@ -14,6 +14,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 
 from .email import send_confirmation_code
 from .filters import TitleFilter
+from .mixins import CreateListDestroyViewSet
 from .permissions import (IsAuthorModerAdminOrReadOnly, AdminOrReadOnly,
                           IsRoleAdmin)
 from .serializers import (
@@ -92,11 +93,11 @@ class UsersViewSet(viewsets.ModelViewSet):
         url_name='current_user_info')
     def get_current_user_info(self, request,):
         """Просмотр и редактирование своего аккаунта."""
-        user = get_object_or_404(User, username=self.request.user)
-        serializer = NotAdminUserSerializer(user)
-        if request.method == 'PATCH':
+        if request.method == 'GET':
+            serializer = NotAdminUserSerializer(self.request.user)
+        else:
             serializer = NotAdminUserSerializer(
-                user, data=request.data, partial=True)
+                self.request.user, data=request.data, partial=True)
             serializer.is_valid(raise_exception=True)
             serializer.save()
         return Response(serializer.data, status=status.HTTP_200_OK)
@@ -122,38 +123,16 @@ class TitleViewSet(viewsets.ModelViewSet):
         return TitleSerializer
 
 
-class GenreViewSet(mixins.CreateModelMixin,
-                   mixins.ListModelMixin,
-                   mixins.DestroyModelMixin,
-                   viewsets.GenericViewSet):
+class GenreViewSet(CreateListDestroyViewSet):
     """Класс жанра произведения. Доступен администратору."""
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
-    permission_classes = (AdminOrReadOnly,)
-    pagination_class = LimitOffsetPagination
-    filter_backends = (filters.SearchFilter,)
-    search_fields = ('name',)
-    lookup_field = 'slug'
-
-    def destroy(self, request, *args, **kwargs):
-        genre_slug = kwargs['slug']
-        get_object_or_404(Genre, slug=genre_slug)
-        Genre.objects.filter(slug=genre_slug).delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-class CategoryViewSet(mixins.CreateModelMixin,
-                      mixins.ListModelMixin,
-                      mixins.DestroyModelMixin,
-                      viewsets.GenericViewSet):
+class CategoryViewSet(CreateListDestroyViewSet):
     """Класс категории произведения. Доступен администратору."""
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
-    permission_classes = (AdminOrReadOnly,)
-    pagination_class = LimitOffsetPagination
-    filter_backends = (filters.SearchFilter,)
-    search_fields = ('name',)
-    lookup_field = 'slug'
 
 
 class ReviewViewSet(viewsets.ModelViewSet):

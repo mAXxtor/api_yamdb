@@ -98,7 +98,9 @@ class UsersViewSet(viewsets.ModelViewSet):
 
 class TitleViewSet(viewsets.ModelViewSet):
     """Класс произведения. Доступен администратору."""
-    queryset = Title.objects.annotate(rating=Avg('reviews__score'))
+    queryset = Title.objects.select_related(
+        "category").prefetch_related("genre").annotate(
+            rating=Avg('reviews__score'))
     serializer_class = TitleSerializer
     permission_classes = (AdminOrReadOnly,)
     pagination_class = LimitOffsetPagination

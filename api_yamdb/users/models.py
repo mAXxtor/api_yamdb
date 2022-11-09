@@ -1,7 +1,8 @@
+from django.conf import settings
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 
-from .validators import username_validation
+from .validators import validate_username
 
 
 ADMIN = 'admin'
@@ -16,39 +17,39 @@ USER_ROLE = (
 
 
 class User(AbstractUser):
-    username = models.CharField(max_length=100,
+    username = models.CharField(max_length=settings.LIMIT_USERNAME,
                                 verbose_name='Логин',
                                 help_text='Укажите логин',
                                 unique=True,
                                 blank=False,
                                 null=False,
-                                validators=(username_validation,),)
-    email = models.EmailField(max_length=254,
+                                validators=(validate_username,),)
+    email = models.EmailField(max_length=settings.LIMIT_EMAIL,
                               verbose_name='Email',
                               help_text='Укажите email',
                               unique=True,
                               blank=False,
                               null=False)
-    confirmation_code = models.CharField(max_length=40,
+    confirmation_code = models.CharField(max_length=settings.LIMIT_CONF_CODE,
                                          blank=True,
                                          verbose_name='Проверочный код')
-    first_name = models.CharField(max_length=100,
+    first_name = models.CharField(max_length=settings.LIMIT_USERNAME,
                                   verbose_name='Имя',
                                   help_text='Укажите Имя',
                                   blank=True)
-    last_name = models.CharField(max_length=100,
+    last_name = models.CharField(max_length=settings.LIMIT_USERNAME,
                                  verbose_name='Фамилия',
                                  help_text='Укажите Фамилию',
                                  blank=True)
-    bio = models.TextField(max_length=1000,
-                           verbose_name='Биография',
+    bio = models.TextField(verbose_name='Биография',
                            help_text='Укажите Биографию',
                            blank=True,)
-    role = models.CharField(max_length=100,
-                            verbose_name='Роль',
-                            choices=USER_ROLE,
-                            default=USER,
-                            help_text='Роль пользователя')
+    role = models.CharField(
+        max_length=max(len(role) for role in USER_ROLE),
+        verbose_name='Роль',
+        choices=USER_ROLE,
+        default=USER,
+        help_text='Роль пользователя')
 
     class Meta:
         verbose_name = 'Пользователь'
@@ -60,10 +61,6 @@ class User(AbstractUser):
 
     def __str__(self):
         return self.username
-
-    @property
-    def is_user(self):
-        return self.role == USER
 
     @property
     def is_admin(self):

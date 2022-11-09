@@ -1,27 +1,23 @@
+from django.core.exceptions import ValidationError
 from django.core.validators import MaxValueValidator, MinValueValidator
-from django.forms import ValidationError
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
 
+from .mixins import UsernameSerializer
 from reviews.models import Category, Comment, Genre, Review, Title
 from reviews.validators import validate_year
 from users.models import User
-from users.validators import username_validation
 
 
-class SignUpSerializer(serializers.ModelSerializer):
+class SignUpSerializer(serializers.ModelSerializer, UsernameSerializer):
     """Сериализатор для аутентификации."""
     class Meta:
         model = User
         fields = ('username', 'email',)
 
-    def validate_username(self, username):
-        """Валидация имени пользователя."""
-        return username_validation(username)
 
-
-class TokenSerializer(serializers.ModelSerializer):
+class TokenSerializer(serializers.ModelSerializer, UsernameSerializer):
     """Сериализатор для токена."""
     username = serializers.CharField(required=True)
     confirmation_code = serializers.CharField(required=True)
@@ -30,12 +26,8 @@ class TokenSerializer(serializers.ModelSerializer):
         model = User
         fields = ('username', 'confirmation_code')
 
-    def validate_username(self, username):
-        """Валидация имени пользователя."""
-        return username_validation(username)
 
-
-class UserSerializer(serializers.ModelSerializer):
+class UserSerializer(serializers.ModelSerializer, UsernameSerializer):
     """Сериализатор для пользователя."""
     username = serializers.CharField(required=True, validators=[
         UniqueValidator(queryset=User.objects.all()), ])
@@ -52,16 +44,9 @@ class UserSerializer(serializers.ModelSerializer):
                   'role')
 
 
-class NotAdminUserSerializer(UserSerializer):
+class NotAdminUserSerializer(UserSerializer, UsernameSerializer):
     """Сериализатор для пользователя."""
-    class Meta:
-        model = User
-        fields = ('username',
-                  'email',
-                  'first_name',
-                  'last_name',
-                  'bio',
-                  'role')
+    class Meta(UserSerializer.Meta):
         read_only_fields = ('role',)
 
 
@@ -70,7 +55,6 @@ class GenreSerializer(serializers.ModelSerializer):
     class Meta:
         fields = ('name', 'slug')
         model = Genre
-        lookup_field = 'slug'
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -78,7 +62,6 @@ class CategorySerializer(serializers.ModelSerializer):
     class Meta:
         fields = ('name', 'slug')
         model = Category
-        lookup_field = 'slug'
 
 
 class TitleSerializer(serializers.ModelSerializer):

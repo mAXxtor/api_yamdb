@@ -1,4 +1,4 @@
-from django.core.exceptions import ValidationError
+from django.conf import settings
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers
@@ -10,29 +10,39 @@ from reviews.validators import validate_year
 from users.models import User
 
 
-class SignUpSerializer(serializers.ModelSerializer, UsernameSerializer):
+class SignUpSerializer(serializers.Serializer, UsernameSerializer):
     """Сериализатор для аутентификации."""
-    class Meta:
-        model = User
-        fields = ('username', 'email',)
+    username = serializers.CharField(
+        max_length=settings.LIMIT_USERNAME,
+        validators=[UniqueValidator(queryset=User.objects.all()), ],
+        required=True)
+    email = serializers.EmailField(
+        max_length=settings.LIMIT_EMAIL,
+        validators=[UniqueValidator(queryset=User.objects.all()), ],
+        required=True)
 
 
-class TokenSerializer(serializers.ModelSerializer, UsernameSerializer):
+class TokenSerializer(serializers.Serializer, UsernameSerializer):
     """Сериализатор для токена."""
-    username = serializers.CharField(required=True)
-    confirmation_code = serializers.CharField(required=True)
-
-    class Meta:
-        model = User
-        fields = ('username', 'confirmation_code')
+    username = serializers.CharField(
+        max_length=settings.LIMIT_USERNAME,
+        validators=[UniqueValidator(queryset=User.objects.all()), ],
+        required=True)
+    confirmation_code = serializers.CharField(
+        max_length=settings.LIMIT_CONF_CODE,
+        required=True)
 
 
 class UserSerializer(serializers.ModelSerializer, UsernameSerializer):
     """Сериализатор для пользователя."""
-    username = serializers.CharField(required=True, validators=[
-        UniqueValidator(queryset=User.objects.all()), ])
-    email = serializers.EmailField(required=True, validators=[
-        UniqueValidator(queryset=User.objects.all()), ])
+    username = serializers.CharField(
+        max_length=settings.LIMIT_USERNAME,
+        validators=[UniqueValidator(queryset=User.objects.all()), ],
+        required=True)
+    email = serializers.EmailField(
+        max_length=settings.LIMIT_EMAIL,
+        validators=[UniqueValidator(queryset=User.objects.all()), ],
+        required=True)
 
     class Meta:
         model = User
@@ -126,7 +136,7 @@ class ReviewSerializer(serializers.ModelSerializer):
         if request.method == 'POST' and Review.objects.filter(
                 title=get_object_or_404(Title, id=title_id),
                 author=request.user).exists():
-            raise ValidationError(
+            raise serializers.ValidationError(
                 'Вы уже оставили отзыв к этому произведению!')
         return data
 

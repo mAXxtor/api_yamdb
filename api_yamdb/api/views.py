@@ -1,18 +1,19 @@
 from django.conf import settings
 from django.contrib.auth.tokens import default_token_generator
+from django.core.exceptions import ValidationError
 from django.core.mail import send_mail
+from django.db import IntegrityError
 from django.db.models import Avg
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.pagination import LimitOffsetPagination
-from rest_framework.permissions import (AllowAny, IsAuthenticated,)
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from .email import send_confirmation_code
 from .filters import TitleFilter
 from .mixins import CreateListDestroyViewSet
 from .permissions import (IsAuthorModerAdminOrReadOnly, AdminOrReadOnly,
@@ -28,53 +29,45 @@ from users.models import User
 
 class ConfCodeView(APIView):
     """Отправка пользователю кода подтверждения."""
-
     def post(self, request):
         serializer = SignUpSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        user = serializer.save()
+        username = serializer.validated_data.get('username')
         email = serializer.validated_data.get('email')
+        try:
+            user, _ = User.objects.get_or_create(username=username,
+                                                 email=email)
+        except IntegrityError as error:
+            raise ValidationError((
+                'Ошибка при попытке создания нового пользователя '
+                f'с username: {username}, email: {email}')) from error
         confirmation_code = default_token_generator.make_token(user)
         send_mail(
             subject='Код подтверждения регистрации',
             message='Вы зарегистрировались на YAMDB!'
                     f'Ваш код подтвержения: {confirmation_code}',
             from_email=settings.ADMIN_EMAIL,
-            recipient_list=[email],
+            recipient_list=[serializer.validated_data.get('email')],
             fail_silently=False,
         )
-        return Response(serializer.validated_data, status=status.HTTP_200_OK)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class TokenView(APIView):
     """Проверка кода подтверждения и отправка токена."""
-
     def post(self, request):
         serializer = TokenSerializer(data=request.data)
-        if not serializer.is_valid():
-            return Response(status=status.HTTP_400_BAD_REQUEST)
-        username = serializer.data['username']
+        serializer.is_valid(raise_exception=True)
+        username = serializer.validated_data.get('username')
         user = get_object_or_404(User, username=username)
-        confirmation_code = serializer.data['confirmation_code']
+        confirmation_code = serializer.validated_data.get('confirmation_code')
         if not default_token_generator.check_token(user, confirmation_code):
-            return Response({'Неверный код'},
-                            status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {'Вы использовали неверный код подтверждения.'},
+                status=status.HTTP_400_BAD_REQUEST)
         token = RefreshToken.for_user(user)
         return Response({'token': str(token.access_token)},
                         status=status.HTTP_200_OK)
-
-
-class UserRegView(APIView):
-    """Регистрация пользователя."""
-    permission_classes = (AllowAny,)
-
-    def post(self, request):
-        serializer = SignUpSerializer(data=request.data)
-        if serializer.is_valid():
-            user = serializer.save()
-            send_confirmation_code(user)
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class UsersViewSet(viewsets.ModelViewSet):

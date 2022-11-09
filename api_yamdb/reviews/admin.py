@@ -9,24 +9,28 @@ class GenreTitleInline(admin.TabularInline):
 
 class TitleAdmin(admin.ModelAdmin):
     """Класс раздела произведений."""
-    list_display = ('name', 'year', 'description', 'category',)
+    list_display = ('name', 'year', 'description', 'category', 'get_genre',)
     search_fields = ('name',)
-    list_filter = ('id', 'year',)
+    list_filter = ('year', 'category', 'get_genre',)
     inlines = [GenreTitleInline]
+
+    def get_genre(self, object):
+        """Получение перечня жанров произведения."""
+        return '\n'.join((genre.name for genre in object.genre.all()))
+
+    get_genre.short_description = 'Жанры произведения'
 
 
 class CategoryAdmin(admin.ModelAdmin):
     """Класс раздела категорий."""
     list_display = ('name', 'slug',)
     search_fields = ('name',)
-    list_filter = ('id',)
 
 
 class GenreAdmin(admin.ModelAdmin):
     """Класс раздела жанров."""
     list_display = ('name', 'slug',)
     search_fields = ('name',)
-    list_filter = ('id',)
 
 
 class ReviewAdmin(admin.ModelAdmin):

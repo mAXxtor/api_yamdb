@@ -26,7 +26,6 @@ class TokenSerializer(serializers.Serializer, UsernameSerializer):
     """Сериализатор для токена."""
     username = serializers.CharField(
         max_length=settings.LIMIT_USERNAME,
-        validators=[UniqueValidator(queryset=User.objects.all()), ],
         required=True)
     confirmation_code = serializers.CharField(
         max_length=settings.LIMIT_CONF_CODE,
@@ -102,6 +101,8 @@ class TitlePostSerialzier(serializers.ModelSerializer):
         queryset=Category.objects.all()
     )
     rating = serializers.IntegerField(required=False)
+    year = serializers.IntegerField(validators=[MinValueValidator(0),
+                                                validate_year, ])
 
     class Meta:
         model = Title

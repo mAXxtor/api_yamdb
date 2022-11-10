@@ -9,6 +9,7 @@ class UserAdmin(admin.ModelAdmin):
                     'last_name', 'bio', 'role')
     search_fields = ('username', 'email',)
     list_filter = ('role',)
+    list_editable = ('role',)
 
 
 admin.site.register(User, UserAdmin)

@@ -19,7 +19,7 @@ class TitleFilter(filters.FilterSet):
         lookup_expr='icontains'
     )
     year = filters.NumberFilter(
-        field_name="year",
+        field_name='year',
         lookup_expr='exact'
     )
 

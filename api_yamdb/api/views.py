@@ -27,6 +27,10 @@ from reviews.models import Category, Genre, Review, Title
 from users.models import User
 
 
+USERNAME_ERROR = 'Пользователь с таким username уже существует'
+EMAIL_ERROR = 'Пользователь с таким email уже существует'
+
+
 class ConfCodeView(APIView):
     """Отправка пользователю кода подтверждения."""
     def post(self, request):
@@ -38,9 +42,9 @@ class ConfCodeView(APIView):
             user, _ = User.objects.get_or_create(username=username,
                                                  email=email)
         except IntegrityError as error:
-            raise ValidationError((
-                'Ошибка при попытке создания нового пользователя '
-                f'с username: {username}, email: {email}')) from error
+            message = (EMAIL_ERROR if User.objects.filter(email=email).exists()
+                       else USERNAME_ERROR)
+            raise ValidationError(message) from error
         confirmation_code = default_token_generator.make_token(user)
         send_mail(
             subject='Код подтверждения регистрации',
@@ -99,7 +103,7 @@ class UsersViewSet(viewsets.ModelViewSet):
 class TitleViewSet(viewsets.ModelViewSet):
     """Класс произведения. Доступен администратору."""
     queryset = Title.objects.select_related(
-        "category").prefetch_related("genre").annotate(
+        'category').prefetch_related('genre').annotate(
             rating=Avg('reviews__score'))
     serializer_class = TitleSerializer
     permission_classes = (AdminOrReadOnly,)

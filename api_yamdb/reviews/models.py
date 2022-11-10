@@ -46,7 +46,7 @@ class Title(models.Model):
         db_index=True
     )
     description = models.TextField(
-        'Описание произведения', max_length=settings.LIMIT_TEXT, blank=True,)
+        'Описание произведения', blank=True,)
     genre = models.ManyToManyField(
         Genre,
         through='GenreTitle',
@@ -66,6 +66,7 @@ class Title(models.Model):
     class Meta:
         verbose_name = 'Произведение'
         verbose_name_plural = 'Произведения'
+        ordering = ('name',)
 
     def __str__(self):
         return self.name
@@ -87,7 +88,7 @@ class ReviewCommentsAbstractModel(models.Model):
         on_delete=models.CASCADE,
         verbose_name='username пользователя'
     )
-    text = models.CharField('Текст', max_length=settings.LIMIT_TEXT)
+    text = models.TextField('Текст')
     pub_date = models.DateTimeField(
         'Дата публикации', auto_now_add=True, db_index=True,)
 

@@ -10,9 +10,9 @@ MODERATOR = 'moderator'
 USER = 'user'
 
 USER_ROLE = (
-    (USER, 'user'),
-    (MODERATOR, 'moderator'),
-    (ADMIN, 'admin'),
+    (USER, 'Пользователь'),
+    (MODERATOR, 'Модератор'),
+    (ADMIN, 'Администратор'),
 )
 
 
@@ -45,7 +45,7 @@ class User(AbstractUser):
                            help_text='Укажите Биографию',
                            blank=True,)
     role = models.CharField(
-        max_length=max(len(role) for role in USER_ROLE),
+        max_length=max(len(role) for role, alt in USER_ROLE),
         verbose_name='Роль',
         choices=USER_ROLE,
         default=USER,

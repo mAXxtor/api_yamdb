@@ -32,6 +32,13 @@ class Command(BaseCommand):
                     if not model.objects.filter(id=row['id']).exists():
                         correct_row = []
                         for key, value in row.items():
+                            if key == 'category':
+                                continue
+                                correct_row.append(
+                                    (key,
+                                     Category.objects.filter(id=value).first()
+                                     )
+                                )
                             if key == 'author':
                                 correct_row.append((
                                     key,

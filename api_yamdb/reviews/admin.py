@@ -11,7 +11,7 @@ class TitleAdmin(admin.ModelAdmin):
     """Класс раздела произведений."""
     list_display = ('name', 'year', 'description', 'category', 'get_genre',)
     search_fields = ('name',)
-    list_filter = ('year', 'category', 'get_genre',)
+    list_filter = ('year', 'category',)
     inlines = [GenreTitleInline]
 
     def get_genre(self, object):

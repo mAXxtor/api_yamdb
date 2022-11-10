@@ -14,11 +14,9 @@ class SignUpSerializer(serializers.Serializer, UsernameSerializer):
     """Сериализатор для аутентификации."""
     username = serializers.CharField(
         max_length=settings.LIMIT_USERNAME,
-        validators=[UniqueValidator(queryset=User.objects.all()), ],
         required=True)
     email = serializers.EmailField(
         max_length=settings.LIMIT_EMAIL,
-        validators=[UniqueValidator(queryset=User.objects.all()), ],
         required=True)
 
 

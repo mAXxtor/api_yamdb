@@ -27,12 +27,11 @@ from reviews.models import Category, Genre, Review, Title
 from users.models import User
 
 
-USERNAME_ERROR = 'Пользователь с таким username уже существует'
-EMAIL_ERROR = 'Пользователь с таким email уже существует'
-
-
 class ConfCodeView(APIView):
-    """Отправка пользователю кода подтверждения."""
+    """Регистрация пользователя и отправка кода подтверждения."""
+    USERNAME_ERROR = 'Пользователь с таким username уже существует'
+    EMAIL_ERROR = 'Пользователь с таким email уже существует'
+
     def post(self, request):
         serializer = SignUpSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -41,17 +40,18 @@ class ConfCodeView(APIView):
         try:
             user, _ = User.objects.get_or_create(username=username,
                                                  email=email)
-        except IntegrityError as error:
-            message = (EMAIL_ERROR if User.objects.filter(email=email).exists()
-                       else USERNAME_ERROR)
-            raise ValidationError(message) from error
+        except IntegrityError:
+            message = (self.EMAIL_ERROR if
+                       User.objects.filter(email=email).exists() else
+                       self.USERNAME_ERROR)
+            return Response(message, status=status.HTTP_400_BAD_REQUEST)
         confirmation_code = default_token_generator.make_token(user)
         send_mail(
             subject='Код подтверждения регистрации',
             message='Вы зарегистрировались на YAMDB!'
                     f'Ваш код подтвержения: {confirmation_code}',
             from_email=settings.ADMIN_EMAIL,
-            recipient_list=[serializer.validated_data.get('email')],
+            recipient_list=[email],
             fail_silently=False,
         )
         return Response(serializer.data, status=status.HTTP_200_OK)

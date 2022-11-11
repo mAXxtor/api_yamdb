@@ -1,11 +1,9 @@
-import re
-
-from django.core.exceptions import ValidationError
 from rest_framework import filters, mixins, viewsets
 from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.serializers import BaseSerializer
 
 from .permissions import AdminOrReadOnly
+from users.validators import validate_username
 
 
 class CreateListDestroyViewSet(mixins.CreateModelMixin,
@@ -26,11 +24,4 @@ class CreateListDestroyViewSet(mixins.CreateModelMixin,
 class UsernameSerializer(BaseSerializer):
     """Сериализатор для username."""
     def validate_username(self, username):
-        if username == 'me':
-            raise ValidationError(
-                'Нельзя использовать "me" как имя пользователя')
-        if re.compile(r'[\w.@+-]+').fullmatch(username) is None:
-            raise ValidationError(
-                'Имя пользователя должно быть не более 150 символов, и '
-                'состоять из букв, цифр и символов ./@/+/-/_')
-        return username
+        return validate_username(username)

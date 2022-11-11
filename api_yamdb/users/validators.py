@@ -10,8 +10,10 @@ def validate_username(username):
     """
     if username == 'me':
         raise ValidationError('Нельзя использовать "me" как имя пользователя')
-    if re.compile(r'[\w.@+-]+').fullmatch(username) is None:
+    if not re.compile(r'[\w.@+-]+').fullmatch(username):
+        restricted_symbols = re.compile(r'[\w.@+-]+').sub('', username)
         raise ValidationError(
             'Имя пользователя должно быть не более 150 символов, и '
-            'состоять из букв, цифр и символов ./@/+/-/_')
+            'состоять из букв, цифр и символов ./@/+/-/_.'
+            f'Использование {restricted_symbols} недопоступимо.')
     return username

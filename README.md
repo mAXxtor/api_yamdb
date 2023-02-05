@@ -44,7 +44,7 @@ pip install -r requirements.txt
 Выполнить миграции из папки проекта:
 
 ```
-cd yatube_api
+cd api_yamdb
 ```
 
 ```
